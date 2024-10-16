@@ -1,0 +1,16 @@
+[package]
+name = "jup-cli"
+authors = ["hirokisan <dev@hirokiueno.com>"]
+description = "A Jupiter CLI that enables swap, etc."
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+keywords = ["jupiter", "solana", "swap", "cli"]
+repository = "https://github.com/hirokisan/jup-cli"
+readme = "README.md"
+rust-version = "1.79.0"
+
+[[bin]]
+name = "jup-cli"
+
+[dependencies]
