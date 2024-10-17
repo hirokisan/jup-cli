@@ -26,3 +26,11 @@ $ jup-cli swap --amount=1 --mint-from=7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgA
 [2024-10-17T10:42:40Z INFO  jup_cli] expected amount: 0.007379
 [2024-10-17T10:42:12Z INFO  jup_cli] Transaction: xxxxxxxx
 ```
+
+## Tips
+
+### Create a Keypair
+
+```console
+$ solana-keygen new -o key_pair.json --no-bip39-passphrase
+```
