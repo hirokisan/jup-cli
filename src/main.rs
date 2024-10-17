@@ -1,11 +1,9 @@
-use crate::rpc::get_mint_decimals;
-use crate::swap::get_swap_api_client;
+use crate::rpc::{get_mint_decimals, get_rpc_client};
+use crate::swap::get_swap_client;
 
 use jupiter_swap_api_client::{
     quote::QuoteRequest, swap::SwapRequest, transaction_config::TransactionConfig,
 };
-
-use solana_client::rpc_client::RpcClient;
 
 use solana_sdk::pubkey;
 use solana_sdk::pubkey::Pubkey;
@@ -15,6 +13,7 @@ use solana_sdk::transaction::VersionedTransaction;
 use clap::*;
 use env_logger::Env;
 use log::info;
+use std::error::Error;
 
 mod rpc;
 mod swap;
@@ -46,10 +45,8 @@ enum SubCommand {
     },
 }
 
-const json_rpc_url
-
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     env_logger::init_from_env(Env::default().default_filter_or("info"));
@@ -63,16 +60,26 @@ async fn main() {
             key_pair_path,
             dry_run,
         } => {
-            let swap_client = get_swap_api_client();
+            let swap_client = get_swap_client();
+            let rpc_client = get_rpc_client();
 
-            let from_keypair = read_keypair_file(key_pair_path).unwrap();
+            let from_keypair = match read_keypair_file(key_pair_path) {
+                Ok(pair) => pair,
+                Err(err) => return Err(err),
+            };
             let from_pubkey = Signer::pubkey(&from_keypair);
 
             let mint_from: Pubkey = pubkey!(mint_from);
             let mint_to: Pubkey = pubkey!(mint_to);
 
-            let mint_from_decimals = get_mint_decimals(&mint_from);
-            let mint_to_decimals = get_mint_decimals(&mint_to);
+            let mint_from_decimals = match get_mint_decimals(&rpc_client, &mint_from) {
+                Ok(decimals) => decimals,
+                Err(err) => return Err(err),
+            };
+            let mint_to_decimals = match get_mint_decimals(&rpc_client, &mint_to) {
+                Ok(decimals) => decimals,
+                Err(err) => return Err(err),
+            };
 
             let quote_request = QuoteRequest {
                 amount: amount as u64 * 10_u64.pow(mint_from_decimals.into()),
@@ -82,33 +89,28 @@ async fn main() {
                 ..QuoteRequest::default()
             };
 
-            let quote_response = swap_client.quote(&quote_request).await.unwrap();
+            let quote_response = swap_client.quote(&quote_request).await?;
             info!(
                 "expected amount: {:?}",
                 (quote_response.out_amount as f64) / (10_u64.pow(mint_to_decimals.into()) as f64)
             );
 
             if !dry_run {
-
                 let swap_response = swap_client
                     .swap(&SwapRequest {
                         user_public_key: from_pubkey,
                         quote_response: quote_response.clone(),
                         config: TransactionConfig::default(),
                     })
-                    .await
-                    .unwrap();
+                    .await?;
                 info!("Raw tx len: {}", swap_response.swap_transaction.len());
 
                 let versioned_transaction: VersionedTransaction =
-                    bincode::deserialize(&swap_response.swap_transaction).unwrap();
+                    bincode::deserialize(&swap_response.swap_transaction)?;
 
                 let signed_versioned_transaction =
-                    VersionedTransaction::try_new(versioned_transaction.message, &[&from_keypair])
-                        .unwrap();
+                    VersionedTransaction::try_new(versioned_transaction.message, &[&from_keypair])?;
 
-                let url = "https://api.mainnet-beta.solana.com".to_string();
-                let rpc_client = RpcClient::new(url);
                 match rpc_client.send_and_confirm_transaction(&signed_versioned_transaction) {
                     Ok(sig) => loop {
                         if let Ok(confirmed) = rpc_client.confirm_transaction(&sig) {
@@ -118,9 +120,11 @@ async fn main() {
                             }
                         }
                     },
-                    Err(err) => info!("Error creating system account: {:?}", err),
+                    Err(err) => return Err(Box::new(err)),
                 };
             }
         }
     };
+
+    Ok(())
 }

@@ -1,12 +1,18 @@
-use solana_client::rpc_client::RpcClient;
-use solana_sdk::pubkey::Pubkey;
-use spl_token::solana_program::program_pack::Pack;
-use spl_token::state::Mint;
+use {
+    solana_client::rpc_client::RpcClient, solana_sdk::pubkey::Pubkey,
+    spl_token::solana_program::program_pack::Pack, spl_token::state::Mint, std::error::Error,
+};
 
-pub fn get_mint_decimals(mint: &Pubkey) -> u8 {
-    let url = "https://api.mainnet-beta.solana.com".to_string();
-    let client = RpcClient::new(url);
-    let account = client.get_account(mint).unwrap();
-    let mint_account = Mint::unpack_from_slice(&account.data).unwrap();
-    mint_account.decimals
+const RPC_URL: &str = "https://api.mainnet-beta.solana.com";
+
+pub fn get_rpc_client() -> RpcClient {
+    let url = RPC_URL.to_string();
+    RpcClient::new(url)
+}
+
+pub fn get_mint_decimals(client: &RpcClient, mint: &Pubkey) -> Result<u8, Box<dyn Error>> {
+    let account = client.get_account(mint)?;
+    let mint_account = Mint::unpack_from_slice(&account.data)?;
+
+    Ok(mint_account.decimals)
 }
