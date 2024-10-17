@@ -103,7 +103,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         config: TransactionConfig::default(),
                     })
                     .await?;
-                info!("Raw tx len: {}", swap_response.swap_transaction.len());
 
                 let versioned_transaction: VersionedTransaction =
                     bincode::deserialize(&swap_response.swap_transaction)?;
@@ -115,7 +114,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     Ok(sig) => loop {
                         if let Ok(confirmed) = rpc_client.confirm_transaction(&sig) {
                             if confirmed {
-                                info!("Transaction: {} Status: {}", sig, confirmed);
+                                info!("Transaction: {}", sig);
                                 break;
                             }
                         }
