@@ -38,7 +38,7 @@ enum SubCommand {
         mint_to: Pubkey,
         #[arg(long, required = true)]
         amount: i32,
-        #[arg(long, default_value_t = 50)] // 0.5%
+        #[arg(long, default_value_t = 50, help = "slippage in basis points")] // 0.5%
         slippage: u16,
         #[arg(long, default_value_t = false)]
         dry_run: bool,
