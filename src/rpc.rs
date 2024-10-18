@@ -3,10 +3,10 @@ use {
     spl_token::solana_program::program_pack::Pack, spl_token::state::Mint, std::error::Error,
 };
 
-const RPC_URL: &str = "https://api.mainnet-beta.solana.com";
+pub const RPC_URL: &str = "https://api.mainnet-beta.solana.com";
 
-pub fn get_rpc_client() -> RpcClient {
-    let url = RPC_URL.to_string();
+pub fn get_rpc_client(rpc_url: &str) -> RpcClient {
+    let url = rpc_url.to_string();
     RpcClient::new(url)
 }
 

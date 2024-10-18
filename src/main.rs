@@ -1,4 +1,4 @@
-use crate::rpc::{get_mint_decimals, get_rpc_client};
+use crate::rpc::{get_mint_decimals, get_rpc_client, RPC_URL};
 use crate::swap::get_swap_client;
 
 use jupiter_swap_api_client::{
@@ -40,6 +40,8 @@ enum SubCommand {
         amount: i32,
         #[arg(long, default_value_t = 50, help = "slippage in basis points")] // 0.5%
         slippage: u16,
+        #[arg(long, default_value_t = RPC_URL.to_string())]
+        rpc_url: String,
         #[arg(long, default_value_t = false)]
         dry_run: bool,
     },
@@ -58,10 +60,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             mint_from,
             mint_to,
             key_pair_path,
+            rpc_url,
             dry_run,
         } => {
             let swap_client = get_swap_client();
-            let rpc_client = get_rpc_client();
+            let rpc_client = get_rpc_client(&rpc_url);
 
             let from_keypair = match read_keypair_file(key_pair_path) {
                 Ok(pair) => pair,
