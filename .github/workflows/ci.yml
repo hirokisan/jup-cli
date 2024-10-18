@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: '*'
+
+jobs:
+  taplo-lint:
+    name: Lint toml files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@1.79.0
+      - uses: Swatinem/rust-cache@v2
+
+      - name: install taplo cli
+        run: cargo install taplo-cli
+
+      - name: lint toml
+        run: taplo lint
+
+      - name: check format toml
+        run: taplo format --check
+
+  lint:
+    name: Lint files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@1.79.0
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+
+      - name: run format
+        run: cargo fmt --all -- --check
+
+      - name: run clippy
+        run: cargo clippy -- -D warnings
+
+      - name: run check
+        run: cargo check
+
+      - name: run audit
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit --ignore RUSTSEC-2024-0344 --ignore RUSTSEC-2022-0093
