@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: '*'
+
+jobs:
+  taplo-lint:
+    name: Lint toml files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@1.79.0
+
+      - name: install taplo cli
+        run: cargo install taplo-cli
+
+      - name: lint toml
+        run: taplo lint
+
+      - name: check format toml
+        run: taplo format --check
+
