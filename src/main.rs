@@ -14,7 +14,6 @@ use solana_sdk::transaction::VersionedTransaction;
 use clap::*;
 use env_logger::Env;
 use log::info;
-use serde_json;
 use std::error::Error;
 
 mod price;

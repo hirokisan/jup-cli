@@ -1,4 +1,3 @@
-use reqwest;
 use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
 
@@ -21,11 +20,11 @@ struct PriceData {
 
 impl PriceClient {
     pub fn new() -> Self {
-        return PriceClient;
+        PriceClient
     }
     pub async fn get_prices(
         self,
-        mints: &Vec<Pubkey>,
+        mints: &[Pubkey],
     ) -> Result<HashMap<String, f64>, Box<dyn Error>> {
         let ids = mints
             .iter()
