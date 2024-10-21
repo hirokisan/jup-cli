@@ -1,3 +1,4 @@
+use crate::price::PriceClient;
 use crate::rpc::{get_mint_decimals, get_rpc_client, RPC_URL};
 use crate::swap::get_swap_client;
 
@@ -13,8 +14,10 @@ use solana_sdk::transaction::VersionedTransaction;
 use clap::*;
 use env_logger::Env;
 use log::info;
+use serde_json;
 use std::error::Error;
 
+mod price;
 mod rpc;
 mod swap;
 
@@ -44,6 +47,10 @@ enum SubCommand {
         rpc_url: String,
         #[arg(long, default_value_t = false)]
         dry_run: bool,
+    },
+    Price {
+        #[arg(long, required = true, value_delimiter = ',')]
+        mints: Vec<Pubkey>,
     },
 }
 
@@ -125,6 +132,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     Err(err) => return Err(Box::new(err)),
                 };
             }
+        }
+        SubCommand::Price { mints } => {
+            let client = PriceClient::new();
+            let resp = client.get_prices(mints.as_ref()).await?;
+            let output = serde_json::to_string(&resp)?;
+            println!("{}", output);
         }
     };
 
